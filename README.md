@@ -1,15 +1,15 @@
-[![crates.io](https://img.shields.io/crates/d/embedded-driver.svg)](https://crates.io/crates/embedded-driver)
-[![crates.io](https://img.shields.io/crates/v/embedded-driver.svg)](https://crates.io/crates/embedded-driver)
-[![Documentation](https://docs.rs/embedded-driver/badge.svg)](https://docs.rs/embedded-driver)
+[![crates.io](https://img.shields.io/crates/d/debounced-button.svg)](https://crates.io/crates/debounced-button)
+[![crates.io](https://img.shields.io/crates/v/debounced-button.svg)](https://crates.io/crates/debounced-button)
+[![Documentation](https://docs.rs/debounced-button/badge.svg)](https://docs.rs/debounced-button)
 ![Minimum Supported Rust Version](https://img.shields.io/badge/rustc-1.46+-blue.svg)
 
-# `embedded-driver-template`
+# `debounced-button`
 
->  A rust-embedded driver template to get you started
+>  A rust-embedded debounced-button, discriminating short- and long-presses.
 
 ## [API reference]
 
-[API reference]: https://docs.rs/embedded-driver
+[API reference]: https://docs.rs/debounced-button
 
 ## Minimum Supported Rust Version (MSRV)
 

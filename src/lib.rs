@@ -1,5 +1,4 @@
 #![cfg_attr(not(test), no_std)]
-#![no_main]
 
 use embedded_hal::digital::v2::InputPin;
 
@@ -9,15 +8,27 @@ pub enum ButtonState {
     LongPress,
 }
 
+/// Whether the pin is pulled up or pulled down by default. A button press would pull it into the
+/// inverted state
 pub enum ButtonPull {
     PullUp,
     PullDown,
 }
 
 pub struct ButtonConfig {
-    press_threshold: f32,
     long_press_threshold: f32,
     pull: ButtonPull,
+}
+
+impl Default for ButtonConfig {
+    fn default() -> Self {
+        Self {
+            /// The time a button press should last to be recognized as a long press (in seconds)
+            long_press_threshold: 2.0,
+            /// The idle button pin state (pulled up or pulled down)
+            pull: ButtonPull::PullUp,
+        }
+    }
 }
 
 pub struct Button<PIN> {
@@ -26,21 +37,7 @@ pub struct Button<PIN> {
     pin: PIN,
     pull: ButtonPull,
     state: Option<ButtonState>,
-    press_threshold: u16,
     long_press_threshold: u16,
-}
-
-impl Default for ButtonConfig {
-    fn default() -> Self {
-        Self {
-            // TODO: maybe remove this
-            /// The time a button press should last to be recognized (in seconds)
-            press_threshold: 0.01,
-            /// The time a button press should last to be recognized as a long press (in seconds)
-            long_press_threshold: 2.0,
-            pull: ButtonPull::PullUp,
-        }
-    }
 }
 
 impl<PIN> Button<PIN>
@@ -54,7 +51,6 @@ where
             pin,
             pull: config.pull,
             state: None,
-            press_threshold: (f_refresh as f32 / (1.0 / config.press_threshold)) as u16,
             long_press_threshold: (f_refresh as f32 / (1.0 / config.long_press_threshold)) as u16,
         }
     }
@@ -77,7 +73,7 @@ where
             if state == 0 {
                 if self.counter >= self.long_press_threshold {
                     self.state = Some(ButtonState::LongPress);
-                } else if self.counter >= self.press_threshold {
+                } else {
                     self.state = Some(ButtonState::Press);
                 }
                 self.debounced = 0;
@@ -93,9 +89,4 @@ where
         }
         None
     }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
 }
