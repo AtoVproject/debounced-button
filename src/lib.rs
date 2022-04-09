@@ -80,6 +80,8 @@ where
                 } else if self.counter >= self.press_threshold {
                     self.state = Some(ButtonState::Press);
                 }
+                self.debounced = 0;
+                self.counter = 0;
             }
         }
     }
