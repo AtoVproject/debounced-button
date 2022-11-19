@@ -4,10 +4,15 @@ use embedded_hal::digital::v2::InputPin;
 
 #[derive(Copy, Clone)]
 pub enum ButtonState {
+    /// Triggered immediately when a button was pressed down
+    Down,
+    /// Triggered after a button was pressed down and came up again
     Press,
-    LongPress,
+    /// Triggered when button is pressed down and held down for a defined time
     Pressing,
-    PressingActive,
+    /// Triggered when button came up again after a defined time
+    LongPress,
+    /// When button is depressed ;)
     Idle,
 }
 
@@ -19,9 +24,9 @@ pub enum ButtonPull {
 }
 
 pub struct ButtonConfig {
-    pressing_threshold: f32,
-    long_press_threshold: f32,
-    pull: ButtonPull,
+    pub pressing_threshold: f32,
+    pub long_press_threshold: f32,
+    pub pull: ButtonPull,
 }
 
 impl Default for ButtonConfig {
@@ -29,7 +34,7 @@ impl Default for ButtonConfig {
         Self {
             /// The time a button press should last to be recognized as a continuous press
             /// (in seconds)
-            pressing_threshold: 0.5,
+            pressing_threshold: 0.2,
             /// The time a button press should last to be recognized as a long press (in seconds)
             long_press_threshold: 2.0,
             /// The idle button pin state (pulled up or pulled down)
@@ -41,11 +46,12 @@ impl Default for ButtonConfig {
 pub struct Button<PIN> {
     counter: u16,
     debounced: u8,
-    pin: PIN,
-    pull: ButtonPull,
-    state: ButtonState,
-    pressing_threshold: u16,
     long_press_threshold: u16,
+    pin: PIN,
+    pressing_threshold: u16,
+    pull: ButtonPull,
+    reset: bool,
+    state: ButtonState,
 }
 
 impl<PIN> Button<PIN>
@@ -56,11 +62,12 @@ where
         Self {
             counter: 0,
             debounced: 0,
-            pin,
-            pull: config.pull,
-            state: ButtonState::Idle,
-            pressing_threshold: (f_refresh as f32 / (1.0 / config.pressing_threshold)) as u16,
             long_press_threshold: (f_refresh as f32 / (1.0 / config.long_press_threshold)) as u16,
+            pin,
+            pressing_threshold: (f_refresh as f32 / (1.0 / config.pressing_threshold)) as u16,
+            pull: config.pull,
+            reset: false,
+            state: ButtonState::Idle,
         }
     }
 
@@ -77,6 +84,9 @@ where
         self.debounced |= state;
         // Button was pressed at least once
         if self.debounced > 0 {
+            if self.counter == 0 {
+                self.state = ButtonState::Down;
+            }
             self.counter = self.counter.wrapping_add(1);
             // Button is being held long enough to be considered a "pressing" action
             if self.counter >= self.pressing_threshold {
@@ -84,7 +94,10 @@ where
             }
             // Button was let go of
             if state == 0 {
-                if self.counter <= self.pressing_threshold {
+                if self.reset {
+                    self.state = ButtonState::Idle;
+                    self.reset = false;
+                } else if self.counter <= self.pressing_threshold {
                     self.state = ButtonState::Press;
                 } else if self.counter >= self.long_press_threshold {
                     self.state = ButtonState::LongPress;
@@ -92,8 +105,8 @@ where
                     self.state = ButtonState::Idle;
                 }
 
-                self.debounced = 0;
                 self.counter = 0;
+                self.debounced = 0;
             }
         }
     }
@@ -107,5 +120,9 @@ where
                 state
             }
         }
+    }
+
+    pub fn reset(&mut self) {
+        self.reset = true;
     }
 }
