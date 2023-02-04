@@ -10,7 +10,7 @@ pub enum ButtonState {
     Press,
     /// Triggered when button is pressed down and held down for a defined time
     Pressing,
-    /// Triggered when button came up again after a defined time
+    /// Triggered when button is pressed down and held down for a longer time
     LongPress,
     /// When button is depressed ;)
     Idle,
@@ -92,6 +92,9 @@ where
             if self.counter >= self.pressing_threshold {
                 self.state = ButtonState::Pressing;
             }
+            if self.counter >= self.long_press_threshold {
+                self.state = ButtonState::LongPress;
+            }
             // Button was let go of
             if state == 0 {
                 if self.reset {
@@ -99,8 +102,6 @@ where
                     self.reset = false;
                 } else if self.counter <= self.pressing_threshold {
                     self.state = ButtonState::Press;
-                } else if self.counter >= self.long_press_threshold {
-                    self.state = ButtonState::LongPress;
                 } else {
                     self.state = ButtonState::Idle;
                 }
