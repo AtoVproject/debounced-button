@@ -114,7 +114,7 @@ where
 
     pub fn read(&mut self) -> ButtonState {
         match self.state {
-            ButtonState::Pressing | ButtonState::Idle => self.state,
+            ButtonState::Pressing | ButtonState::LongPress | ButtonState::Idle => self.state,
             _ => {
                 let state = self.state;
                 self.state = ButtonState::Idle;
